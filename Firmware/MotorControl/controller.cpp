@@ -266,6 +266,24 @@ bool Controller::update() {
         if (config_.enable_gain_scheduling && abs_pos_err <= config_.gain_scheduling_width) {
             gain_scheduling_multiplier = abs_pos_err / config_.gain_scheduling_width;
         }
+
+		if (config_.enable_pos_err_sync) {
+			Axis* other = (axis_ == &axes[0] ? &axes[1] : &axes[0]);
+            float other_pos_err = other->controller_.pos_setpoint_ - other->encoder_.pos_estimate_.any().value_or(0.0f);
+			other_pos_err = -other_pos_err;
+			float sync_err = pos_err - other_pos_err;
+
+#if 0
+			// Limit sync force so that it only reduces the current
+			// untested!
+			if (axis_ == axes[0])
+				vel_des = std::clamp(vel_des+sync_err*config_.pos_err_sync_gain, 0, vel_des);
+            else
+				vel_des = std::clamp(vel_des+sync_err*config_.pos_err_sync_gain, vel_des, 0);
+#else
+			vel_des = vel_des+sync_err*config_.pos_err_sync_gain;
+#endif
+        }
     }
 
     // Velocity limiting
@@ -393,4 +411,11 @@ bool Controller::update() {
     // calibration would leave the controller in an error state.
     error_ &= ~ERROR_INVALID_ESTIMATE;
     return true;
+}
+
+void Controller::set_input_pos(float value) {
+    if (!axis_->motor_.activated_landing_) {
+        input_pos_ = value;
+        input_pos_updated();
+    }
 }

@@ -187,6 +187,8 @@ interfaces:
       oscilloscope: {type: Oscilloscope}
       can: {type: Can}
       test_property: uint32
+      any_errors_and_watchdog_feed: {type: readonly bool, c_getter: get_any_errors_and_watchdog_feed()}
+      trigger_jump: {type: bool, c_setter: set_trigger_jump}
         
     functions:
       test_function: {in: {delta: int32}, out: {cnt: int32}}
@@ -726,6 +728,28 @@ interfaces:
       max_dc_calib: {type: readonly float32, unit: A}
       fet_thermistor: OnboardThermistorCurrentLimiter
       motor_thermistor: OffboardThermistorCurrentLimiter
+            
+      current_threshold: float32
+      current_threshold_mode: int32
+      activated_landing: bool
+
+      l_pos_zero_delta: float32
+      l_pos_zero_max: float32
+      l_base_angle: float32
+      l_vel_gain: float32
+      l_pos_gain: float32
+      l_vel_integrator_gain: float32
+      l_vel_limit: float32
+
+      trigger_jump: bool
+      jump_pos_target: float32
+      j_vel_gain: float32
+      j_pos_gain: float32
+      j_vel_integrator_gain: float32
+      j_vel_limit: float32
+      j_current_lim_margin: float32
+      j_current_lim: float32
+
       current_control:
         c_is_class: True
         attributes:
@@ -807,7 +831,10 @@ interfaces:
   ODrive.Oscilloscope:
     c_is_class: True
     attributes:
+      loop_counter: readonly uint32
       size: readonly uint32
+      force_trigger: bool
+      trigger_counter: int64
     functions:
       get_val: {in: {index: uint32}, out: {val: float32}}
   
@@ -923,7 +950,9 @@ interfaces:
           vel_limit_tolerance:
             type: float32
             doc: Ratio to `vel_limit`. Infinity to disable.
-          vel_ramp_rate: float32
+          vel_ramp_rate: 
+            type: float32
+            unit: turn/s^2
           torque_ramp_rate:
             type: float32
             unit: Nm / sec
@@ -979,6 +1008,10 @@ interfaces:
             type: float32
             doc: "Electrical power threshold for spinout detection. This should be a positive value"
             unit: Watt
+
+          enable_pos_err_sync: bool
+          pos_err_sync_gain: float32
+
       autotuning:
         c_is_class: False
         attributes:
@@ -1023,6 +1056,9 @@ interfaces:
               [your encoder](https://docs.odriverobotics.com/encoders). The
               ODrive uses your supplied value for the motor pole pairs to
               measure the CPR. So you should also double check this value.
+              
+              If you are still having issues, you can try to increase
+              `encoder.config.calib_scan_distance` up to a factor of 4 above the default.
 
               If your encoder cpr and motor pole pair settings are correct,
               this error can be caused because motor cogging makes the motor
@@ -1070,6 +1106,7 @@ interfaces:
       calib_scan_response: readonly float32
       pos_abs: int32
       spi_error_rate: readonly float32
+      spi_abs_ams_error_flag: readonly bool
       config:
         c_is_class: False
         attributes:
@@ -1079,6 +1116,7 @@ interfaces:
           use_index_offset: bool
           find_idx_on_lockin_only: {type: bool, c_setter: set_find_idx_on_lockin_only}
           abs_spi_cs_gpio_pin: {type: uint16, c_setter: set_abs_spi_cs_gpio_pin, doc: Make sure that the GPIO is in `GPIO_MODE_DIGITAL`.}
+          ignore_abs_ams_error_flag: bool
           cpr: int32
           phase_offset: int32
           phase_offset_float: float32

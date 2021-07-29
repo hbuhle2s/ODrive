@@ -590,6 +590,54 @@ void Motor::update(uint32_t timestamp) {
     } else {
         Vdq_setpoint_ = {vd, vq};
     }
+
+
+
+	{
+		if (current_threshold_mode_ != 0) {
+			float Iq_des = iq;
+			if ((current_threshold_mode_ == 1 && Iq_des > current_threshold_) || 
+				(current_threshold_mode_ == 2 && Iq_des < current_threshold_)) {
+				for (Axis& ax : axes) {
+					ax.motor_.current_threshold_mode_ = -1;
+					ax.motor_.activated_landing_ = true;
+				}
+			}
+		}
+		if (current_threshold_mode_ == -1) {
+			current_threshold_mode_ = 0;
+
+			float abs_pos0 =  axes[0].encoder_.pos_estimate_.any().value_or(0.0f) + axes[0].motor_.l_base_angle_;
+			float abs_pos1 = -axes[1].encoder_.pos_estimate_.any().value_or(0.0f) - axes[1].motor_.l_base_angle_;
+			float abs_target = std::min((abs_pos0+abs_pos1)*0.5f + l_pos_zero_delta_, l_pos_zero_max_);
+			//axis_->controller_.config_.control_mode = Controller::CONTROL_MODE_TORQUE_CONTROL;
+			axis_->controller_.config_.input_mode = Controller::INPUT_MODE_PASSTHROUGH;
+			if (axis_->axis_num_ == 0)
+				axis_->controller_.input_pos_              = abs_target-l_base_angle_;
+			else
+				axis_->controller_.input_pos_              = -abs_target-l_base_angle_;
+			axis_->controller_.input_pos_updated_          = true;
+			axis_->controller_.config_.vel_gain            = l_vel_gain_;
+			axis_->controller_.config_.pos_gain            = l_pos_gain_;
+			axis_->controller_.config_.vel_integrator_gain = l_vel_integrator_gain_;
+			axis_->controller_.config_.vel_limit           = l_vel_limit_*5.0f;
+			axis_->trap_traj_ .config_.vel_limit           = l_vel_limit_;
+			axis_->controller_.config_.enable_pos_err_sync = true;
+		}
+		if (trigger_jump_) {
+			trigger_jump_ = false;
+			axis_->controller_.config_.input_mode = Controller::INPUT_MODE_PASSTHROUGH;
+			axis_->controller_.input_pos_                  = jump_pos_target_;
+			axis_->controller_.input_pos_updated_          = true;
+			axis_->controller_.config_.vel_gain            = j_vel_gain_;
+			axis_->controller_.config_.pos_gain            = j_pos_gain_;
+			axis_->controller_.config_.vel_integrator_gain = j_vel_integrator_gain_;
+			axis_->controller_.config_.vel_limit           = j_vel_limit_*5.0f;
+			axis_->trap_traj_ .config_.vel_limit           = j_vel_limit_;
+			config_.current_lim_margin                     = j_current_lim_margin_;
+			config_.current_lim                            = j_current_lim_;
+		}
+    }
 }
 
 

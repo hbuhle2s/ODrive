@@ -221,9 +221,9 @@ public:
 
     // Edit these to suit your capture needs
     Oscilloscope oscilloscope_{
-        nullptr, // trigger_src
-        0.5f, // trigger_threshold
-        nullptr // data_src TODO: change data type
+        //nullptr, // trigger_src
+        //0.5f, // trigger_threshold
+        //nullptr // data_src TODO: change data type
     };
 
     ODriveCAN can_;
@@ -239,6 +239,10 @@ public:
     uint32_t n_evt_control_loop_ = 0;
     bool task_timers_armed_ = false;
     TaskTimes task_times_;
+    bool get_any_errors_and_watchdog_feed();
+
+    void set_trigger_jump(bool value);
+    bool trigger_jump_; // dummy
 };
 
 extern ODrive odrv; // defined in main.cpp

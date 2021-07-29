@@ -223,6 +223,18 @@ bool ODrive::any_error() {
         });
 }
 
+bool ODrive::get_any_errors_and_watchdog_feed() {
+    for(auto& axis : axes)
+        axis.watchdog_feed();
+    return any_error();
+}
+
+void ODrive::set_trigger_jump(bool value) {
+    for(Axis& axis : axes) {
+        axis.motor_.trigger_jump_ = true;
+    }
+}
+
 uint64_t ODrive::get_drv_fault() {
 #if AXIS_COUNT == 1
     return motors[0].gate_driver_.get_error();

@@ -133,6 +133,27 @@ public:
     OutputPort<float2D> Idq_setpoint_ = {{0.0f, 0.0f}}; // fed to the FOC
     
     PhaseControlLaw<3>* control_law_;
+
+    float current_threshold_ = 0;
+    int32_t current_threshold_mode_ = 0; // 0: disabled, 1: trigger if above, 2: trigger if below
+    bool activated_landing_ = false;
+
+    float l_pos_zero_delta_ = 0;
+    float l_pos_zero_max_ = 0;
+    float l_base_angle_ = 0;
+    float l_vel_gain_ = 0;
+    float l_pos_gain_ = 0;
+    float l_vel_integrator_gain_ = 0;
+    float l_vel_limit_ = 0;
+
+    bool  trigger_jump_ = false;
+    float jump_pos_target_ = 0;
+    float j_vel_gain_ = 0;
+    float j_pos_gain_ = 0;
+    float j_vel_integrator_gain_ = 0;
+    float j_vel_limit_ = 0;
+    float j_current_lim_margin_ = 0;
+    float j_current_lim_ = 0;
 };
 
 

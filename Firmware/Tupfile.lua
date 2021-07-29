@@ -396,7 +396,8 @@ end
 
 -- Generate Tup Rules ----------------------------------------------------------
 
-python_command = find_python3()
+-- python_command = find_python3()
+python_command = "/home/pi/archiconda3/envs/odrive/bin/python -B"
 print('Using python command "'..python_command..'"')
 
 -- TODO: use CI to verify that on PRs the enums.py file is consistent with the YAML.

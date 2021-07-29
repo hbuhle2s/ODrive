@@ -55,6 +55,9 @@ public:
         float electrical_power_bandwidth = 20.0f; // [rad/s] filter cutoff for electrical power for spinout detection
         float spinout_electrical_power_threshold = 10.0f; // [W] electrical power threshold for spinout detection
         float spinout_mechanical_power_threshold = -10.0f; // [W] mechanical power threshold for spinout detection
+	
+		bool enable_pos_err_sync = false;
+		float pos_err_sync_gain = 0;
 
         // custom setters
         Controller* parent;
@@ -125,7 +128,7 @@ public:
     OutputPort<float> torque_output_ = 0.0f;
 
     // custom setters
-    void set_input_pos(float value) { input_pos_ = value; input_pos_updated(); }
+    void set_input_pos(float value);
 };
 
 #endif // __CONTROLLER_HPP
